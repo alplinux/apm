@@ -340,6 +340,8 @@ upgrade_packages() {
     cd "$INSTALLED_DIR"
     for w in *
     do
+        for i in $(ls $REPO_PATH/*.apmrepo)
+        do
         #shellcheck source=/dev/null
         . "$INSTALLED_DIR/$w"/run
 	LOCAL_VERSION=$VERSION
@@ -347,7 +349,10 @@ upgrade_packages() {
     #shellcheck source=/dev/null
     . "$MAIN_REPO_DIR/$w"/run
 	REPO_VERSION=$VERSION
-	if [ ! "$LOCAL_VERSION" = "$REPO_VERSION" ]
+        #shellcheck source=/dev/null
+        . "$i-repo/$w/run
+        $i_VERSION=$VERSION
+	if [ ! "$LOCAL_VERSION" = "$REPO_VERSION" || ! "$LOCAL_VERSION" = $"$i_VERSION" ]
         then
             echo "apm: upgrading $w"
             echo "apm: new version of $w: $REPO_VERSION"
@@ -357,6 +362,7 @@ upgrade_packages() {
                 install_binaries "$w"
             fi
         fi
+        done
     done
 }
 
