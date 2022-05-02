@@ -341,7 +341,7 @@ get_info() {
     echo "is installed: $ISINSTALLED"
     for i in $(ls $REPO_PATH/*.apmrepo)
     do
-	. "$i"/"$1"/run
+	. "$i-repo"/"$1"/run
 	[ -d "$INSTALLED_DIR/$1"] && ISINSTALLED=yes
 	[ ! -d "$INSTALLED_DIR/$1"] && ISINSTALLED=no
 	echo "package name: $NAME"
