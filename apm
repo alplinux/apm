@@ -331,6 +331,7 @@ upgrade_packages() {
 
 # Get information about the package from the runfile
 get_info() {
+    if [ -d "$MAIN_REPO_DIR/$1" ]; then
     #shellcheck source=/dev/null
     . "$MAIN_REPO_DIR/$1"/run
     [ -d "$INSTALLED_DIR/$1" ] && ISINSTALLED=yes
@@ -339,6 +340,7 @@ get_info() {
     echo "package desc: $DESCRIPTION"
     echo "package ver:  $VERSION"
     echo "is installed: $ISINSTALLED"
+    fi
     for i in $(ls $REPO_PATH/*.apmrepo)
     do
 	. "$i-repo"/"$1"/run
