@@ -135,6 +135,23 @@ build_package() {
         [ ! -d "/etc/apm.tarballs" ] && mkdir -p /etc/apm.tarballs
         tar -czvf /etc/apm.tarballs/apm-tarball-"$1"-"$VERSION".tar.gz ./*
         unset ROOT
+# Installing packaged tarball
+    if [ ! "$DONT_INSTALL" = "1" ]; then
+        case "-r" in
+            "$3")
+                export ROOT="$4"
+                ROOT="$4" install_package "$1" /etc/apm.tarballs/apm-tarball-"$1"-"$VERSION".tar.gz
+                ;;
+            "$2")
+                export ROOT="$3"
+                ROOT="$3" install_package "$1" "/etc/apm.tarballs/apm-tarball-$1-$VERSION.tar.gz"
+                ;;
+            *)
+                export ROOT="/"
+                ROOT="/" install_package "$1" /etc/apm.tarballs/apm-tarball-"$1"-"$VERSION".tar.gz
+                ;;
+        esac
+    fi
     else
         echo "Which repo will you use"
         info $1
@@ -152,6 +169,23 @@ build_package() {
         [ ! -d "/etc/apm.tarballs" ] && mkdir -p /etc/apm.tarballs
         tar -czvf /etc/apm.tarballs/apm-tarball-"$1"-"$VERSION".tar.gz ./*
         unset ROOT
+# Installing packaged tarball
+    if [ ! "$DONT_INSTALL" = "1" ]; then
+        case "-r" in
+            "$3")
+                export ROOT="$4"
+                ROOT="$4" install_overlay "$1" /etc/apm.tarballs/apm-tarball-"$1"-"$VERSION".tar.gz
+                ;;
+            "$2")
+                export ROOT="$3"
+                ROOT="$3" install_overlay "$1" "/etc/apm.tarballs/apm-tarball-$1-$VERSION.tar.gz"
+                ;;
+            *)
+                export ROOT="/"
+                ROOT="/" install_overlay "$1" /etc/apm.tarballs/apm-tarball-"$1"-"$VERSION".tar.gz
+                ;;
+        esac
+    fi
     fi
     
     # Installing packaged tarball
