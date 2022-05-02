@@ -139,7 +139,7 @@ build_package() {
         echo "Which repo will you use"
         info $1
         read WHICH_REPO
-        
+
         # Sourcing the package runfile
         # shellcheck source=/dev/null
         . "$REPO_PATH"/"$WHICH_REPO"/"$1"/run
@@ -196,12 +196,12 @@ install_overlay() {
         cd "$ROOT" || err "apm: unknown error" 
         tar -hxvf "$2" > /tmp/"$1".log
         [ ! -d "$ROOT/$INSTALLED_DIR/$1" ] && mkdir -p "$ROOT/$INSTALLED_DIR/$1"
-        cp -rf "$i/$1/"* "$ROOT/$INSTALLED_DIR/$1"
+        cp -rf "$WHICH_REPO/$1/"* "$ROOT/$INSTALLED_DIR/$1"
         mv /tmp/"$1".log "$ROOT/$INSTALLED_DIR/$1/list_files"
     else
         tar -xvf "$2" -C /
         [ ! -d "$INSTALLED_DIR/$1" ] && mkdir -p "$INSTALLED_DIR/$1"
-        cp -rf "$i/$1/"* "$INSTALLED_DIR/$1"
+        cp -rf "$WHICH_REPO/$1/"* "$INSTALLED_DIR/$1"
         mv /tmp/"$1".log "$INSTALLED_DIR/$1/list_files"
     fi
 }
