@@ -227,7 +227,6 @@ install_overlay() {
 install_binaries() {
     chkroot
     #shellcheck source=/dev/null
-
     . "$MAIN_REPO_DIR"/"$1"/run
     [ ! -d "/etc/apm.tarballs" ] && mkdir -p /etc/apm.tarballs
     TARBALL="apm-tarball-$1-$VERSION.tar.gz"
@@ -269,6 +268,7 @@ install_binaries() {
 # This allows us to make a complete loop that doesnt exit until dependencies are in the `deps` environment variable.
 
 chkdeps() {
+    if [ -d "$MAIN_REPO_DIR/$2" ]; then
     for cLine in $(cat "$MAIN_REPO_DIR/$2/deps" 2> /dev/null)
     do
     if [ ! -d "$ROOT/$INSTALLED_DIR/$2" ]; then
@@ -276,17 +276,37 @@ chkdeps() {
         dep_handler "" "$cLine"
     fi
     done
+    else
+	chkdeps_overlay "$2"
+    fi
+}
+
+chkdeps_overlay() {
+    for cLine in $(cat "$WHICH_REPO/$2/deps" 2> /dev/null)
+    do
+	if [ ! -d "$ROOT/$INSTALLED_DIR/$2" ]; then
+	    deps="$deps $cLine"
+	    dep_handler "" "$cLine"
+	fi
+    done
 }
 
 dep_handler() {
-    add_repo_dir "$2"
+    #add_repo_dir "$2"
     if [ "$2" = "" ]; then
         printf "apm: have to supply a package name\n" 
         exit 1
     else    
         if [ ! -d "$MAIN_REPO_DIR/$2" ]; then
-            printf "apm: invalid package name/repo isnt initialized (apm u to initialize)\n"
-            exit 1
+	    for i in $(ls $REPO_PATH/*.apmrepo); do
+	    	if [ -d "$i/$2" ]; then
+		    for Line in $(cat "$i/$2/deps" 2> /dev/null); do
+			deps="$deps $Line"
+			chkdeps "" "$Line"
+			exit 1
+		    done
+		fi
+	    done
         else
             for Line in $(cat "$MAIN_REPO_DIR/$2/deps" 2> /dev/null)	
             do
@@ -294,6 +314,7 @@ dep_handler() {
                 chkdeps "" "$Line" 
             done
         fi
+
     fi
 }
 
