@@ -269,6 +269,7 @@ install_binaries() {
 # This allows us to make a complete loop that doesnt exit until dependencies are in the `deps` environment variable.
 
 chkdeps() {
+    if [ -d "$MAIN_REPO_DIR/$2" ]; then
     for cLine in $(cat "$MAIN_REPO_DIR/$2/deps" 2> /dev/null)
     do
     if [ ! -d "$ROOT/$INSTALLED_DIR/$2" ]; then
@@ -276,22 +277,44 @@ chkdeps() {
         dep_handler "" "$cLine"
     fi
     done
+        else
+            chkdeps_overlay "$2"
+    fi
+}
+
+chkdeps_overlay() {
+        for cLine in $(cat "$WHICH_REPO/$2/deps" 2> /dev/null)
+        do
+        if [ ! -d "$ROOT/$INSTALLED_DIR/$2" ]; then
+            deps="$deps $cLine"
+            dep_handler "" "$cLine"
+        fi
+        done
 }
 
 dep_handler() {
-    add_repo_dir "$2"
+    #add_repo_dir "$2"
     if [ "$2" = "" ]; then
-        printf "apm: have to supply a package name\n" 
+        printf "apm: have to supply a package name\n"
         exit 1
-    else    
+    else
         if [ ! -d "$MAIN_REPO_DIR/$2" ]; then
-            printf "apm: invalid package name/repo isnt initialized (apm u to initialize)\n"
-            exit 1
+            for i in $(ls $REPO_PATH/*.apmrepo)
+            do
+                if [ -d "$REPO_PATH/$i/$2" ]; then
+                    for Line in $(cat "$REPO_PATH/$i$2/deps" 2> /dev/null)
+                    do
+                        deps="$deps $Line"
+                        chkdeps "" "$Line"
+                    done
+                    exit 1
+                fi
+            done
         else
-            for Line in $(cat "$MAIN_REPO_DIR/$2/deps" 2> /dev/null)	
+            for Line in $(cat "$MAIN_REPO_DIR/$2/deps" 2> /dev/null)
             do
                 deps="$deps $Line"
-                chkdeps "" "$Line" 
+                chkdeps "" "$Line"
             done
         fi
     fi
