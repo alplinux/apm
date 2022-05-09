@@ -156,7 +156,7 @@ build_package() {
         echo "Which repo will you use"
         get_info $1
         read WHICH_REPO
-
+	echo "Selection : "
         # Sourcing the package runfile
         # shellcheck source=/dev/null
         . "$REPO_PATH"/"$WHICH_REPO-repo"/"$1"/run
@@ -191,7 +191,6 @@ build_package() {
 
 install_package() {
     # Install tarball 
-    add_repo_dir "$1"
     if [ ! "$ROOT" = "" ]; then
         cd "$ROOT" || err "apm: unknown error" 
         tar -hxvf "$2" > /tmp/"$1".log
@@ -226,9 +225,18 @@ install_overlay() {
 # A feature long-waited, shipped with apm v1.4
 install_binaries() {
     chkroot
-    #shellcheck source=/dev/null
-
-    . "$MAIN_REPO_DIR"/"$1"/run
+    if [ -d "$MAIN_REPO_DIR/$1" ]; then
+    	#shellcheck source=/dev/null
+    	. "$MAIN_REPO_DIR"/"$1"/run
+    else
+	unset $WHICH_REPO
+	get_info "$1" || err "apm: no package exist"
+	read WHICH_REPO
+	echo "Selection : "
+	#shellcheck source=/dev/null
+	. "$REPO_PATH/$WHICH_REPO-repo/$1"/run
+    fi
+    
     [ ! -d "/etc/apm.tarballs" ] && mkdir -p /etc/apm.tarballs
     TARBALL="apm-tarball-$1-$VERSION.tar.gz"
     cd /etc/apm.tarballs || err "apm: an error occured"
@@ -366,7 +374,7 @@ upgrade_packages() {
         #shellcheck source=/dev/null
         . "$INSTALLED_DIR/$w"/run
 	LOCAL_VERSION=$VERSION
-	add_repo_dir "$w"
+    if [ -d "$MAIN_REPO_DIR/$w" ]; then
     #shellcheck source=/dev/null
     . "$MAIN_REPO_DIR/$w"/run
 	REPO_VERSION=$VERSION
@@ -380,6 +388,24 @@ upgrade_packages() {
                 install_binaries "$w"
             fi
         fi
+	#Overlay function here too
+    else
+	unset $WHICH_REPO
+	get_info $w || err "apm: error"
+	read WHICH_REPO
+	. "$REPO_PATH/$WHICH_REPO-repo/$w"/run
+	    OVERLAY_VERSION=$VERSION
+	    if [ ! "$LOCAL_VERSION" = "$OVERLAY_VERSION"]; then
+		echo "apm: upgrading $w"
+		echo "apm: new version of $w: $OVERLAY_VERSION"
+		if [ "$1" = "-b" ];then
+		    # Will add a build_overlay function to build from overlay.
+		    build_package "$w"
+		else
+		    install_binaries "$w"
+		fi
+	   fi
+    fi
     done
 }
 
