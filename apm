@@ -375,7 +375,7 @@ remove_packages() {
 # A basic git pull and a check to see if the repositories actually exist.
 update_packages() {
     chkroot
-    [ ! -d "$MAIN_REPO_DIR" ] && git clone https://git.kreatea.space/alplinux/apm-repo $MAIN_REPO_DIR || cd $MAIN_REPO_DIR && git pull
+    [ ! -d "$MAIN_REPO_DIR" ] && git clone https://github.com/alplinux/apm-repo.git $MAIN_REPO_DIR || cd $MAIN_REPO_DIR && git pull
     for i in $(ls $REPO_PATH/*.apmrepo)
     do
     cd $REPO_PATH || exit 1
