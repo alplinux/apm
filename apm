@@ -35,7 +35,7 @@ chkroot() {
 defvalues() {
     export REPO_PATH="/etc/apm/repos"
     export DOWNLOADER="wget"
-    export MIRROR_PATH="https://mirror.kreatea.space"
+    export MIRROR_PATH="https://mirror.alqx.tech"
 }
 
 # Make required folders if they dont exist
@@ -88,7 +88,6 @@ add_repo_dir() {
 }
 
 build_package() {
-    
     # Checking if the user is root
     chkroot
     
@@ -153,6 +152,7 @@ build_package() {
         esac
     fi
     else
+	unset WHICH_REPO
         echo "Which repo will you use"
         get_info $1
         read WHICH_REPO
@@ -165,7 +165,7 @@ build_package() {
         cd $SRCDIR || exit 1
         build
         cd $ROOT || exit 1
-        installpkg 2> /devnull || echo "apm: installpkg function not found, skipping"
+        installpkg 2> /dev/null || echo "apm: installpkg function not found, skipping"
         [ ! -d "/etc/apm.tarballs" ] && mkdir -p /etc/apm.tarballs
         tar -czvf /etc/apm.tarballs/apm-tarball-"$1"-"$VERSION".tar.gz ./*
         unset ROOT
@@ -187,6 +187,27 @@ build_package() {
         esac
     fi
     fi
+}
+
+build_overlay() {
+	unset WHICH_REPO
+	echo "Which repo will you use"
+	get_info $1
+	read WHICH_REPO
+	echo "Selection: "
+	
+	. "$REPO_PATH"/"$WHICH_REPO-repo"/"$1"/run
+
+	cd $SRCDIR || exit 1
+	build
+	cd $ROOT || exit 1
+	installpkg 2> /dev/null || echo "apm: installpkg function not found, skipping"
+	[ ! -d "/etc/apm.tarballs" ] && mkdir -p /etc/apm.tarballs
+	tar -czvf /etc/apm.tarballs/apm-tarball-"$1"-"$VERSION".tar.gz ./*
+	unset ROOT
+
+	export ROOT="/"
+	ROOT="/" install_overlay "$1" /etc/apm.tarballs/apm-tarball-"$1"-"$VERSION".tar.gz
 }
 
 install_package() {
@@ -229,7 +250,7 @@ install_binaries() {
     	#shellcheck source=/dev/null
     	. "$MAIN_REPO_DIR"/"$1"/run
     else
-	unset $WHICH_REPO
+	unset WHICH_REPO
 	get_info "$1" || err "apm: no package exist"
 	read WHICH_REPO
 	echo "Selection : "
@@ -390,7 +411,7 @@ upgrade_packages() {
         fi
 	#Overlay function here too
     else
-	unset $WHICH_REPO
+	unset WHICH_REPO
 	get_info $w || err "apm: error"
 	read WHICH_REPO
 	. "$REPO_PATH/$WHICH_REPO-repo/$w"/run
@@ -400,9 +421,9 @@ upgrade_packages() {
 		echo "apm: new version of $w: $OVERLAY_VERSION"
 		if [ "$1" = "-b" ];then
 		    # Will add a build_overlay function to build from overlay.
-		    build_package "$w"
-		else
 		    install_binaries "$w"
+		else
+		    build_overlay "$w"
 		fi
 	   fi
     fi
